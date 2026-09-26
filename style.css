@@ -1,58 +1,478 @@
-:root{--g:#2f6b4f;--gd:#22503b;--tint:#f2f7f4;--line:#dfe8e2;--tx:#1e2924;--mu:#5d6b64;--err:#a33a3a}
+/* ============================================================
+   Peace Nature Empire — luxury editorial redesign
+   Palette: forest green / warm cream / ivory / taupe
+   All class names & IDs required by script.js are preserved.
+   ============================================================ */
+
+:root{
+  --forest-deep:#1c3226;
+  --forest:#3c6b4c;
+  --forest-soft:#5c8468;
+  --forest-tint:#eef3ec;
+  --cream:#f8f3ea;
+  --ivory:#fffcf7;
+  --taupe:#a8907a;
+  --taupe-tint:#efe6d8;
+  --ink:#20241f;
+  --mu:#71685c;
+  --line:#e6ddcd;
+  --err:#a3453a;
+  --err-tint:#f7ece9;
+  --radius:4px;
+  --radius-lg:2px;
+  --shadow-sm:0 1px 3px rgba(28,50,38,.06);
+  --shadow:0 18px 44px -22px rgba(28,50,38,.35);
+  --serif:'Fraunces','Iowan Old Style',Georgia,serif;
+  --sans:'Jost',system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --ease:cubic-bezier(.22,.7,.24,1);
+}
+
 *{box-sizing:border-box}
-body{margin:0;font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--tx);background:#fff}
-h1,h2,h3,.logo{font-family:Georgia,"Times New Roman",serif;font-weight:600;line-height:1.2;margin:0 0 .5em}
-h1{font-size:clamp(2rem,5vw,3.2rem)}h2{font-size:clamp(1.5rem,3vw,2rem)}
-a{color:var(--g)}img{max-width:100%;display:block}
-.wrap{max-width:1100px;margin:0 auto;padding:0 20px}
-main{padding-top:32px;padding-bottom:56px;min-height:65vh}
-.site-header{border-bottom:1px solid var(--line);position:sticky;top:0;background:#fff;z-index:5}
-.bar{display:flex;justify-content:space-between;align-items:center;gap:16px;min-height:64px;flex-wrap:wrap}
-.logo{font-size:1.3rem;color:var(--g);text-decoration:none;margin:0}
-nav{display:flex;gap:22px}
-nav a{text-decoration:none;color:var(--tx);padding:4px 0;border-bottom:2px solid transparent}
-nav a.on,nav a:hover{border-color:var(--g);color:var(--g)}
-.badge{background:var(--g);color:#fff;border-radius:99px;font-size:.75rem;padding:1px 7px;margin-left:2px}
-.btn{display:inline-block;background:var(--g);color:#fff;border:0;border-radius:6px;padding:12px 24px;font:inherit;font-weight:600;cursor:pointer;text-decoration:none}
-.btn:hover{background:var(--gd)}.btn:disabled{background:#b8c4bd;cursor:not-allowed}
-.btn.alt{background:#fff;color:var(--g);border:1.5px solid var(--g)}.btn.alt:hover{background:var(--tint)}
-.hero{background:var(--tint);border-radius:12px;padding:clamp(32px,7vw,80px);margin-bottom:48px}
-.hero p{max-width:520px;color:var(--mu);font-size:1.1rem}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:24px}
-.card{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff;display:flex;flex-direction:column}
-.card a{text-decoration:none;color:inherit}
-.img{aspect-ratio:1;background:var(--tint);object-fit:cover;width:100%}
-.card .body{padding:14px 16px 18px}
-.card h3{font-size:1.05rem;margin:0 0 4px}
-.price{font-weight:700;color:var(--g)}
-.tag{display:inline-block;font-size:.8rem;border-radius:99px;padding:2px 10px;background:var(--tint);color:var(--g)}
-.tag.out{background:#f6e9e9;color:var(--err)}
-.sec{margin:56px 0}.sec-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
-.benefits{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px}
-.benefits div{border-left:3px solid var(--g);padding:4px 0 4px 16px}.benefits p{margin:0;color:var(--mu)}
-.cta{background:var(--g);color:#fff;border-radius:12px;padding:40px;text-align:center}
-.cta .btn{background:#fff;color:var(--g)}
-.detail{display:grid;grid-template-columns:1fr 1fr;gap:40px}
-.detail .img{border-radius:10px}
-.qty{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:6px}
-.qty button{background:none;border:0;width:36px;height:36px;font-size:1.1rem;cursor:pointer;color:var(--g)}
-.qty span{min-width:32px;text-align:center}
-.row{display:grid;grid-template-columns:72px 1fr auto;gap:16px;align-items:center;padding:16px 0;border-bottom:1px solid var(--line)}
-.row .img{width:72px;border-radius:6px}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  font:16px/1.7 var(--sans);
+  color:var(--ink);
+  background:var(--ivory);
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+  /* Body is the real flex container. #app is set to `display:contents`
+     further down, so its own children (.hero, .sec, .sec.cta) become
+     orderable flex items alongside the static editorial/lifestyle bands,
+     letting the homepage sections above be sequenced without touching
+     script.js's markup or DOM structure. */
+  display:flex;
+  flex-direction:column;
+  min-height:100vh;
+}
+h1,h2,h3{font-family:var(--serif);font-weight:500;line-height:1.12;margin:0 0 .5em;color:var(--forest-deep);letter-spacing:-.01em}
+h1{font-size:clamp(2.3rem,5vw,3.7rem);font-weight:500}
+h2{font-size:clamp(1.5rem,3vw,2.15rem)}
+h3{font-size:1.05rem;font-weight:600;font-family:var(--sans);letter-spacing:.01em}
+p{max-width:62ch}
+a{color:var(--forest);text-decoration:none}
+img{max-width:100%;display:block}
+.wrap{max-width:1180px;margin:0 auto;padding:0 28px}
+main{padding-bottom:0;min-height:55vh}
+
+::selection{background:var(--forest-tint);color:var(--forest-deep)}
+:focus-visible{outline:2px solid var(--forest);outline-offset:3px}
+
+/* ---------- gentle, single-purpose motion ---------- */
+.reveal{opacity:0;transform:translateY(26px);transition:opacity .9s var(--ease),transform .9s var(--ease)}
+.reveal.in{opacity:1;transform:translateY(0)}
+@media (prefers-reduced-motion: reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important}
+  .reveal{opacity:1!important;transform:none!important}
+}
+
+/* ---------- header ---------- */
+.site-header{
+  order:0;
+  border-bottom:1px solid var(--line);
+  position:sticky;top:0;z-index:30;
+  background:rgba(255,252,247,.9);
+  -webkit-backdrop-filter:blur(8px);
+  backdrop-filter:blur(8px);
+}
+.bar{display:flex;justify-content:space-between;align-items:center;gap:24px;min-height:82px;flex-wrap:wrap}
+
+.logo{display:flex;align-items:center;min-width:48px;height:40px}
+.logo-img{max-height:40px;width:auto;max-width:200px;object-fit:contain}
+.logo.logo-fallback .logo-img{display:none}
+.logo.logo-fallback::after{
+  content:"Peace Nature Empire";
+  font-family:var(--serif);font-size:1.3rem;font-weight:500;
+  color:var(--forest-deep);white-space:nowrap;
+}
+
+nav{display:flex;gap:2px;align-items:center;flex-wrap:wrap}
+nav a{
+  color:var(--ink);text-decoration:none;
+  padding:9px 16px;font-size:.94rem;letter-spacing:.01em;
+  position:relative;
+}
+nav a::after{
+  content:"";position:absolute;left:16px;right:16px;bottom:6px;height:1px;
+  background:var(--forest);transform:scaleX(0);transform-origin:left;
+  transition:transform .3s var(--ease);
+}
+nav a:hover::after,nav a.on::after{transform:scaleX(1)}
+nav a.on{color:var(--forest-deep)}
+.badge{
+  background:var(--forest-deep);color:var(--ivory);border-radius:99px;
+  font-size:.68rem;padding:1px 6px;margin-left:5px;display:inline-block;
+}
+
+/* ---------- buttons ---------- */
+.btn{
+  display:inline-block;background:var(--forest-deep);color:var(--ivory);border:1px solid var(--forest-deep);
+  border-radius:999px;padding:14px 34px;font:inherit;font-size:.92rem;font-weight:600;
+  letter-spacing:.03em;cursor:pointer;text-decoration:none;
+  transition:background .3s var(--ease),color .3s var(--ease),border-color .3s var(--ease),transform .3s var(--ease);
+}
+.btn:hover{background:var(--forest);border-color:var(--forest);transform:translateY(-1px)}
+.btn:active{transform:translateY(0)}
+.btn:disabled{background:#d8d2c4;border-color:#d8d2c4;color:#948c7c;cursor:not-allowed;transform:none}
+.btn.alt{background:transparent;color:var(--forest-deep);border:1px solid var(--forest-deep)}
+.btn.alt:hover{background:var(--forest-deep);color:var(--ivory)}
+
+/* ============================================================
+   HERO — generated by script.js as: <section class="hero">
+   <h1>…</h1><p>…</p><a class="btn">…</a></section>
+   Styled as a full-bleed editorial split, no frame, no watermark.
+   ============================================================ */
+.hero {
+  order: 1;
+  width: 100%;
+  min-height: 420px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 70px 28px;
+  box-sizing: border-box;
+  background: var(--forest-tint);
+}
+
+.hero::before {
+  content: none;
+}
+
+.hero h1,
+.hero p,
+.hero .btn {
+  max-width: 520px;
+}
+
+.hero p {
+  line-height: 1.7;
+}
+
+@media(max-width:880px){
+  .hero{min-height:clamp(480px,88vh,620px);justify-content:flex-end;padding:0}
+  .hero::before{inset:0;background:
+      linear-gradient(180deg,rgba(20,36,27,.15) 40%,rgba(15,26,20,.72) 100%),
+      url('/images/hero.jpeg') center/cover no-repeat,
+      linear-gradient(150deg,var(--forest-deep),var(--forest))}
+  .hero h1,.hero p{max-width:100%}
+  .hero h1{color:var(--ivory)}
+  .hero p{color:rgba(255,252,247,.86)}
+  .hero{padding:0 22px 48px}
+}
+
+/* ---------- editorial band (static, home only) ---------- */
+.edit-band{display:none}
+.life-band{display:none}
+body[data-route="home"] .edit-band{
+  display:grid;grid-template-columns:1fr 1fr;align-items:stretch;
+  order:2;min-height:420px;
+}
+body[data-route="home"] .life-band{
+  display:block;position:relative;order:4;min-height:340px;overflow:hidden;
+}
+.edit-media{position:relative;background:linear-gradient(150deg,var(--taupe-tint),var(--forest-tint));overflow:hidden}
+.edit-media img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;transition:transform .8s var(--ease)}
+.edit-band:hover .edit-media img{transform:scale(1.035)}
+.edit-copy{display:flex;flex-direction:column;justify-content:center;padding:64px 56px;max-width:500px}
+.edit-copy p{color:var(--mu)}
+
+.life-band img{width:100%;height:clamp(320px,46vw,480px);object-fit:cover;background:linear-gradient(150deg,var(--forest-deep),var(--taupe))}
+.life-caption{
+  position:absolute;left:0;bottom:0;padding:36px 40px;
+  background:linear-gradient(0deg,rgba(20,32,24,.55),transparent);
+  width:100%;
+}
+.life-caption p{
+  color:var(--ivory);font-family:var(--serif);font-style:italic;font-weight:500;
+  font-size:clamp(1.3rem,2.6vw,1.9rem);margin:0;max-width:none;
+}
+
+@media(max-width:760px){
+  body[data-route="home"] .edit-band{grid-template-columns:1fr;order:2}
+  .edit-media{min-height:280px}
+  .edit-copy{padding:50px 24px}
+}
+
+/* ---------- sections generated inside #app ---------- */
+#app{display:contents}
+.hero{width:100%}
+.sec{width:100%;max-width:1180px;margin:96px auto 0;padding:0 28px}
+/* script.js renders home() as four sibling <section> elements in this
+   order: .hero, .sec (Featured Collection), .sec (Why shop), .sec.cta.
+   :nth-of-type counts by tag name among all <section> siblings, so the
+   hero counts as position 1 even though it lacks the .sec class. */
+.sec:nth-of-type(2){order:3}   /* Featured Collection */
+.sec:nth-of-type(3){order:5}   /* Why shop with us */
+.sec.cta{order:6;margin:0 auto 96px}
+
+/* Shop, contact, product-detail, cart and checkout pages don't use `.sec`
+   at all (see script.js) — their top-level pieces are plain elements
+   (h2, p, .grid, .detail, .two, .center, .msg …). Since #app is
+   `display:contents`, those become direct flex items of <body>, so give
+   every one of them the same order + centered width, and only the first
+   one on the page a top margin. Source order is preserved automatically
+   for items that share an order value. */
+body:not([data-route="home"]) #app > *{
+  order:1;width:100%;max-width:1180px;margin-left:auto;margin-right:auto;
+  padding-left:28px;padding-right:28px;
+}
+body:not([data-route="home"]) #app > *:first-child{margin-top:56px}
+
+.sec-head{display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap;margin-bottom:32px;border-bottom:1px solid var(--line);padding-bottom:18px}
+.sec-head h2{margin:0}
+.sec-head a{font-size:.9rem;border-bottom:1px solid var(--forest)}
+
+/* Shop page category filter — script.js wraps the filter buttons in a
+   plain <p>; loosen its prose max-width and let the pills wrap tidily. */
+body[data-route="shop"] #app > p{max-width:none;display:flex;flex-wrap:wrap;margin:0 0 36px}
+
+/* ---------- product grid / cards ---------- */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:36px 28px}
+.card{background:transparent;display:flex;flex-direction:column}
+.card a{color:inherit;display:flex;flex-direction:column;gap:0}
+.img{
+  aspect-ratio:4/5;object-fit:cover;width:100%;
+  background:linear-gradient(150deg,var(--forest-tint),var(--taupe-tint));
+  transition:transform .7s var(--ease);
+}
+.card:hover .img{transform:scale(1.035)}
+.card .body{padding:16px 2px 0}
+.card h3{font-family:var(--serif);font-size:1.15rem;font-weight:500;margin:0 0 5px;transition:color .25s ease}
+.card:hover h3{color:var(--forest)}
+.price{color:var(--mu);font-size:.98rem}
+/* Base tag styling (used on the product-detail page for stock status and,
+   when present, category). Kept quiet — a small label, not a badge. */
+.tag{display:inline-block;margin-top:8px;font-size:.74rem;letter-spacing:.03em;color:var(--mu)}
+.tag.out{color:var(--err);font-weight:600}
+/* Grid cards only ever render one tag (in-stock or sold-out — script.js
+   never adds a category tag here), so on cards we hide the "In Stock"
+   default entirely and let a dimmed image speak for stock instead;
+   "Sold Out" stays visible so it reads at a glance. */
+.card .tag:not(.out){display:none}
+.card .tag.out{font-size:.72rem}
+.card:has(.tag.out) .img{filter:grayscale(.25) brightness(.94)}
+
+/* ---------- benefits / "why shop" and contact info blocks ---------- */
+.benefits{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:36px;padding-top:32px;border-top:1px solid var(--line)}
+.benefits div{padding:0}
+.benefits h3{color:var(--forest-deep);margin-bottom:.4em}
+.benefits p{margin:0;color:var(--mu)}
+
+/* CONTACT PAGE ONLY */
+
+.contact-page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 60px 24px;
+}
+
+.contact-page .contact-intro {
+  text-align: center;
+  max-width: 650px;
+  margin: 0 auto 45px;
+}
+
+.contact-page .contact-intro h2 {
+  margin: 0 0 10px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 40px;
+  color: #1f3d2b;
+}
+
+.contact-page .contact-intro p {
+  margin: 0;
+  color: #666;
+  line-height: 1.7;
+}
+
+.contact-page .contact-layout {
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr;
+  gap: 40px;
+  align-items: start;
+}
+
+/* Contact details */
+
+.contact-page .contact-info {
+  background: #f7f4ed;
+  padding: 30px;
+  border-radius: 16px;
+}
+
+.contact-page .contact-info h3,
+.contact-page .contact-form h3 {
+  margin: 0 0 25px;
+  font-family: Georgia, "Times New Roman", serif;
+  color: #1f3d2b;
+}
+
+.contact-page .contact-item {
+  margin-bottom: 22px;
+}
+
+.contact-page .contact-item strong {
+  display: block;
+  margin-bottom: 5px;
+  color: #1f3d2b;
+}
+
+.contact-page .contact-item p {
+  margin: 0;
+  color: #555;
+  line-height: 1.6;
+}
+
+/* Form */
+
+.contact-page .contact-form {
+  padding: 30px;
+  background: #fff;
+  border: 1px solid #e5e0d6;
+  border-radius: 16px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06);
+}
+
+.contact-page .contact-form label {
+  display: block;
+  margin-bottom: 7px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+.contact-page .contact-form input,
+.contact-page .contact-form select,
+.contact-page .contact-form textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 13px 14px;
+  margin-bottom: 18px;
+  border: 1px solid #ddd8ce;
+  border-radius: 8px;
+  font: inherit;
+  outline: none;
+}
+
+.contact-page .contact-form textarea {
+  resize: vertical;
+}
+
+.contact-page .contact-form input:focus,
+.contact-page .contact-form select:focus,
+.contact-page .contact-form textarea:focus {
+  border-color: #1f3d2b;
+}
+
+/* WhatsApp button */
+
+.contact-page .contact-form button {
+  width: 100%;
+  padding: 14px 20px;
+  border: 0;
+  border-radius: 8px;
+  background: #1f3d2b;
+  color: white;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.contact-page .contact-form button:hover {
+  background: #173021;
+  transform: translateY(-1px);
+}
+
+/* Mobile */
+
+@media (max-width: 768px) {
+  .contact-page {
+    padding: 40px 18px;
+  }
+
+  .contact-page .contact-layout {
+    grid-template-columns: 1fr;
+    gap: 25px;
+  }
+
+  .contact-page .contact-intro h2 {
+    font-size: 34px;
+  }
+}
+
+/* ---------- closing CTA (kept quiet — not a solid block) ---------- */
+.cta{
+  text-align:center;padding:72px 28px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+  background:var(--cream);
+}
+.cta h2{color:var(--forest-deep)}
+.cta p{color:var(--mu);max-width:440px;margin:0 auto 1.8em}
+.cta .btn{background:var(--forest-deep);border-color:var(--forest-deep);color:var(--ivory)}
+.cta .btn:hover{background:var(--forest);border-color:var(--forest)}
+
+/* ---------- product detail ---------- */
+.detail{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:start}
+.detail .img{aspect-ratio:4/5;border-radius:var(--radius-lg)}
+.detail h1{font-size:2rem}
+.qty{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.qty button{background:none;border:0;width:40px;height:40px;font-size:1.1rem;cursor:pointer;color:var(--forest-deep);transition:background .2s ease}
+.qty button:hover{background:var(--forest-tint)}
+.qty span{min-width:32px;text-align:center;font-weight:600}
+
+/* ---------- cart / rows ---------- */
+.row{display:grid;grid-template-columns:84px 1fr auto;gap:18px;align-items:center;padding:22px 0;border-bottom:1px solid var(--line)}
+.row .img{width:84px;aspect-ratio:4/5;border-radius:var(--radius-lg)}
+.row strong{font-family:var(--serif);font-weight:500;font-size:1.05rem}
 .row .sub{text-align:right}
-.link{background:none;border:0;color:var(--mu);text-decoration:underline;cursor:pointer;font:inherit;padding:0}
-.totals{margin-top:20px;text-align:right}.totals .t{font-size:1.3rem;font-weight:700}
-.actions{display:flex;gap:12px;justify-content:flex-end;flex-wrap:wrap;margin-top:20px}
-.two{display:grid;grid-template-columns:1.2fr 1fr;gap:40px;align-items:start}
-label{display:block;font-weight:600;margin:14px 0 4px;font-size:.95rem}
-input,textarea{width:100%;font:inherit;padding:11px 12px;border:1px solid #c5d2cb;border-radius:6px}
-input:focus,textarea:focus{outline:2px solid var(--g);outline-offset:1px}
-.summary{background:var(--tint);border-radius:10px;padding:20px}
-.summary .l{display:flex;justify-content:space-between;gap:12px;padding:6px 0}
-.msg{padding:14px 16px;border-radius:8px;background:var(--tint);margin:16px 0}
-.msg.err{background:#f9ecec;color:var(--err)}
-.field-err{color:var(--err);font-size:.85rem;margin-top:3px}
-.center{text-align:center;padding:40px 0}
-.site-footer{border-top:1px solid var(--line);padding:24px 0;color:var(--mu);font-size:.9rem}
-.site-footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
-@media(max-width:760px){.detail,.two{grid-template-columns:1fr}.bar{padding:10px 20px}nav{gap:16px}.row{grid-template-columns:60px 1fr}.row .sub{grid-column:2;text-align:left}.actions{justify-content:stretch}.actions .btn{flex:1;text-align:center}}
+.link{background:none;border:0;color:var(--mu);text-decoration:underline;text-underline-offset:3px;cursor:pointer;font:inherit;font-size:.86rem;padding:0;margin-top:6px;transition:color .2s ease}
+.link:hover{color:var(--err)}
+.totals{margin-top:28px;text-align:right;padding-top:20px;border-top:1px solid var(--line)}
+.totals .t{font-size:1.4rem;font-weight:500;color:var(--forest-deep);font-family:var(--serif)}
+.actions{display:flex;gap:14px;justify-content:flex-end;flex-wrap:wrap;margin-top:28px}
+
+/* ---------- forms / checkout ---------- */
+.two{display:grid;grid-template-columns:1.2fr 1fr;gap:56px;align-items:start}
+label{display:block;font-weight:600;margin:18px 0 7px;font-size:.86rem;color:var(--forest-deep);letter-spacing:.01em}
+input,textarea{
+  width:100%;font:inherit;padding:13px 14px;border:1px solid var(--line);
+  border-radius:var(--radius);background:var(--ivory);transition:border-color .2s ease,box-shadow .2s ease;
+}
+input:focus,textarea:focus{outline:none;border-color:var(--forest);box-shadow:0 0 0 3px var(--forest-tint)}
+.summary{background:var(--cream);border:1px solid var(--line);border-radius:var(--radius-lg);padding:28px}
+.summary h3{font-family:var(--serif);font-size:1.2rem;font-weight:500}
+.summary .l{display:flex;justify-content:space-between;gap:12px;padding:8px 0;font-size:.94rem}
+
+/* ---------- messages ---------- */
+.msg{padding:16px 18px;border-radius:var(--radius);background:var(--forest-tint);color:var(--forest-deep);margin:18px 0;font-size:.94rem}
+.msg.err{background:var(--err-tint);color:var(--err)}
+.field-err{color:var(--err);font-size:.82rem;margin-top:5px;min-height:1.1em}
+.center{text-align:center;padding:64px 0}
+
+/* ---------- footer ---------- */
+.site-footer{order:10;border-top:1px solid var(--line);padding:36px 0;color:var(--mu);font-size:.88rem;background:var(--cream)}
+.site-footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.site-footer a{color:var(--forest-deep)}
+.site-footer a:hover{color:var(--forest)}
+
+/* ---------- responsive ---------- */
+@media(max-width:880px){
+  .detail,.two{grid-template-columns:1fr;gap:32px}
+  .sec{margin-top:64px}
+  .cta{padding:56px 24px}
+}
+@media(max-width:640px){
+  .bar{min-height:66px;gap:12px}
+  nav{width:100%;justify-content:space-between}
+  nav a{padding:8px 6px;font-size:.86rem}
+  .grid{grid-template-columns:repeat(2,1fr);gap:22px 16px}
+  .row{grid-template-columns:60px 1fr}
+  .row .sub{grid-column:1 / -1;display:flex;justify-content:space-between;align-items:center;text-align:left;margin-top:10px}
+  .actions{justify-content:stretch}
+  .actions .btn{flex:1;text-align:center}
+  .site-footer .wrap{flex-direction:column;text-align:center}
+  .hero .btn{display:inline-block;width:100%;text-align:center}
+}

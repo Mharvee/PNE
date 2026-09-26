@@ -45,7 +45,8 @@ function productGrid(list) {
 
 function home() {
   return `<section class="hero"><h1>Peace Nature Empire</h1>
-    <p>Welcome to our online store. Browse our collection, order in a few clicks and pay securely.</p>
+    <p>Welcome to our online store. Browse our collection, order in a 
+    <br>few clicks and pay securely.</p>
     <a class="btn" href="#/shop">Shop Now</a></section>
   <section class="sec"><div class="sec-head"><h2>Featured Products</h2><a href="#/shop">View all</a></div>${productGrid(products.slice(0, 4))}</section>
   <section class="sec"><h2>Why shop with us</h2><div class="benefits">
@@ -117,9 +118,92 @@ function checkoutPage() {
 }
 
 function contactPage() {
-  return `<h2>Contact</h2><p>We'd love to hear from you.</p><div class="benefits">
-    <div><h3>Phone</h3><p>[Your phone number]</p></div><div><h3>Email</h3><p>[Your email address]</p></div>
-    <div><h3>Instagram</h3><p>[Your Instagram handle]</p></div><div><h3>Location</h3><p>[Your location]</p></div></div>`;
+  return `
+    <section class="contact-page">
+      <div class="contact-intro">
+        <h2>Let's Talk</h2>
+        <p>
+          Have a question, want to place an order, or need help choosing the right hair?
+          Send us a message and we'll be happy to assist you.
+        </p>
+      </div>
+
+      <div class="contact-layout">
+
+        <div class="contact-info">
+          <h3>Get in Touch</h3>
+
+          <div class="contact-item">
+            <strong>Phone</strong>
+            <p>+234 9033014328</p>
+          </div>
+
+          <div class="contact-item">
+            <strong>Email</strong>
+            <p>Lilymmor.22@gmail.com</p>
+          </div>
+
+          <div class="contact-item">
+            <strong>Instagram</strong>
+            <p>@peacenature_empire</p>
+          </div>
+
+          <div class="contact-item">
+            <strong>Location</strong>
+            <p>
+              Goshen Land Plaza, Shop 28, Hosanna Wing,
+              Kosoko Road, Ojodu Berger, Lagos
+            </p>
+          </div>
+        </div>
+
+        <form class="contact-form" onsubmit="sendToWhatsApp(event)">
+
+          <h3>Send Us an Enquiry</h3>
+
+          <label for="contact-name">Your Name</label>
+          <input
+            type="text"
+            id="contact-name"
+            placeholder="Enter your name"
+            required
+          >
+
+          <label for="contact-phone">Phone / WhatsApp Number</label>
+          <input
+            type="tel"
+            id="contact-phone"
+            placeholder="e.g. 08012345678"
+            required
+          >
+
+          <label for="contact-interest">What are you interested in?</label>
+          <select id="contact-interest" required>
+            <option value="">Select an option</option>
+            <option value="Wig">Wig</option>
+            <option value="Hair">Hair</option>
+            <option value="Hair installation">Hair Installation</option>
+            <option value="Custom order">Custom Order</option>
+            <option value="Other">Other</option>
+          </select>
+
+          <label for="contact-message">Your Message</label>
+          <textarea
+            id="contact-message"
+            rows="5"
+            placeholder="Tell us what you're looking for..."
+            required
+          ></textarea>
+
+          <button type="submit">
+            Send Enquiry on WhatsApp
+          </button>
+
+        </form>
+
+      </div>
+    </section>
+  `;
 }
 
 function successPage(orderId, ref) {
