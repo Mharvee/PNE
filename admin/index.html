@@ -333,6 +333,27 @@
         <div class="stat-tile"><div class="num">–</div><div class="label">Sold out</div></div>
         <div class="stat-tile"><div class="num">–</div><div class="label">Total orders</div></div>
       </div>
+      <div class="panel" style="margin-bottom:36px;">
+        <div class="panel-head"><h3>Sale settings</h3></div>
+        <div style="padding:22px;">
+          <div class="error-msg" id="sale-error"></div>
+          <div class="field">
+            <div class="toggle-row">
+              <label class="switch">
+                <input type="checkbox" id="sale-active">
+                <span class="slider"></span>
+              </label>
+              <span id="sale-label">Sale: OFF</span>
+            </div>
+          </div>
+          <div class="field" style="max-width:220px;">
+            <label for="sale-percentage">Discount percentage (%)</label>
+            <input type="number" id="sale-percentage" min="0" max="100" step="0.01" value="0">
+          </div>
+          <button class="btn" id="save-sale-btn">Save sale</button>
+        </div>
+      </div>
+
       <div class="panel">
         <div class="panel-head"><h3>Recent orders</h3></div>
         <div class="table-scroll">
@@ -552,7 +573,7 @@
     document.getElementById("login-screen").style.display = "none";
     document.getElementById("app").classList.add("show");
     document.getElementById("who-label").textContent = session.user.email;
-    await Promise.all([loadDashboard(), loadProducts(), loadOrders()]);
+    await Promise.all([loadDashboard(), loadProducts(), loadOrders(), loadSaleSettings()]);
   }
 
   async function checkExistingSession(){
@@ -591,6 +612,50 @@
   });
   function openModal(id){ document.getElementById(id).classList.add("show"); }
   function closeModal(id){ document.getElementById(id).classList.remove("show"); }
+
+  /* ---------------- Sale settings ---------------- */
+  async function loadSaleSettings(){
+    try{
+      const s = await apiCall("/api/admin-settings");
+      document.getElementById("sale-active").checked = !!s.sale_active;
+      document.getElementById("sale-label").textContent = s.sale_active ? "Sale: ON" : "Sale: OFF";
+      document.getElementById("sale-percentage").value = s.sale_percentage;
+    } catch(err){
+      toast(err.message, true);
+    }
+  }
+
+  document.getElementById("sale-active").addEventListener("change", (e) => {
+    document.getElementById("sale-label").textContent = e.target.checked ? "Sale: ON" : "Sale: OFF";
+  });
+
+  document.getElementById("save-sale-btn").addEventListener("click", async () => {
+    const btn = document.getElementById("save-sale-btn");
+    const errEl = document.getElementById("sale-error");
+    errEl.classList.remove("show");
+    const raw = document.getElementById("sale-percentage").value;
+    const pct = Number(raw);
+    if(raw === "" || !isFinite(pct) || pct < 0 || pct > 100){
+      errEl.textContent = "Discount must be a number between 0 and 100.";
+      errEl.classList.add("show");
+      return;
+    }
+    btn.disabled = true;
+    btn.textContent = "Saving…";
+    try{
+      await apiCall("/api/admin-settings", {
+        method: "PUT",
+        body: { sale_active: document.getElementById("sale-active").checked, sale_percentage: pct }
+      });
+      toast("Sale settings saved.");
+    } catch(err){
+      errEl.textContent = err.message;
+      errEl.classList.add("show");
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Save sale";
+    }
+  });
 
   /* ---------------- Dashboard ---------------- */
   async function loadDashboard(){

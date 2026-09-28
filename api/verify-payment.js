@@ -36,10 +36,23 @@ module.exports = async (req, res) => {
     const prods = await pr.json();
     if (!pr.ok || !Array.isArray(prods)) return fail(502, 'We could not check product prices. Please try again.');
     if (prods.length !== clean.size) return fail(400, 'One or more products are no longer available.');
+
+    // 2b. Current store-wide sale (read live from Supabase, never from the browser).
+    const sr = await sb('store_settings?id=eq.1&select=sale_active,sale_percentage');
+    const sd = await sr.json();
+    if (!sr.ok || !Array.isArray(sd)) return fail(502, 'We could not check the current sale. Please try again.');
+    const sale = sd[0] || {};
+    const salePct = Number(sale.sale_percentage);
+    const saleOn = sale.sale_active === true && isFinite(salePct) && salePct > 0 && salePct <= 100;
+    const unitPrice = (price) => saleOn ? Math.round(Number(price) * (100 - salePct) / 100) : Number(price);
+
     let total = 0;
+    const paidPrice = new Map();
     for (const p of prods) {
       if (!p.in_stock) return fail(400, `"${p.name}" is sold out.`);
-      total += Number(p.price) * clean.get(String(p.id));
+      const u = unitPrice(p.price);
+      paidPrice.set(String(p.id), u);
+      total += u * clean.get(String(p.id));
     }
 
     // 3. Verify with Paystack.
@@ -65,7 +78,7 @@ module.exports = async (req, res) => {
     const orderId = od[0].id;
     const ir = await sb('order_items', {
       method: 'POST',
-      body: JSON.stringify(prods.map(p => ({ order_id: orderId, product_id: p.id, quantity: clean.get(String(p.id)), price: p.price })))
+      body: JSON.stringify(prods.map(p => ({ order_id: orderId, product_id: p.id, quantity: clean.get(String(p.id)), price: paidPrice.get(String(p.id)) })))
     });
     if (!ir.ok) return fail(500, 'Your payment was verified but we could not save your order items.');
     return res.status(200).json({ ok: true, orderId });

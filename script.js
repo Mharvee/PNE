@@ -3,12 +3,29 @@ const app = document.getElementById('app');
 const fmt = n => '₦' + Number(n).toLocaleString('en-NG');
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let cfg = null, products = [], loadError = '', paying = false;
+let sale = { active: false, pct: 0 };
 let cart = [];
 try { cart = JSON.parse(localStorage.getItem('pne_cart') || '[]').filter(i => i && i.id && i.qty > 0); } catch (e) { cart = []; }
 const saveCart = () => { try { localStorage.setItem('pne_cart', JSON.stringify(cart)); } catch (e) {} updateBadge(); };
 const updateBadge = () => { document.getElementById('cart-count').textContent = cart.reduce((n, i) => n + i.qty, 0); };
 const find = id => products.find(p => String(p.id) === String(id));
 const img = p => `<img class="img" src="${esc(p.image || '/images/img1.jpeg')}" alt="${esc(p.name)}" loading="lazy">`;
+
+/* ---------- sale pricing (must match api/verify-payment.js) ---------- */
+const saleOn = () => sale.active && sale.pct > 0 && sale.pct <= 100;
+const unit = price => saleOn() ? Math.round(Number(price) * (100 - sale.pct) / 100) : Number(price);
+const priceHtml = p => saleOn()
+  ? `<span class="price-now">${fmt(unit(p.price))}</span> <s class="price-was">${fmt(p.price)}</s> <span class="tag sale-tag">${esc(String(sale.pct))}% OFF</span>`
+  : fmt(p.price);
+async function loadSale() {
+  const sr = await fetch(`${cfg.supabaseUrl}/rest/v1/store_settings?id=eq.1&select=sale_active,sale_percentage`, {
+    headers: { apikey: cfg.supabaseAnonKey, Authorization: 'Bearer ' + cfg.supabaseAnonKey }
+  });
+  if (!sr.ok) throw new Error('Could not load sale settings.');
+  const sd = await sr.json();
+  const s = Array.isArray(sd) && sd[0] ? sd[0] : {};
+  sale = { active: s.sale_active === true, pct: Number(s.sale_percentage) || 0 };
+}
 
 /* ---------- data ---------- */
 async function init() {
@@ -23,6 +40,7 @@ async function init() {
     });
     if (!pr.ok) throw new Error('Could not load products.');
     products = await pr.json();
+    await loadSale();
   } catch (e) {
     loadError = "We couldn't load our products right now. Please refresh the page or try again shortly.";
   }
@@ -33,7 +51,7 @@ async function init() {
 /* ---------- views ---------- */
 function productCard(p) {
   return `<article class="card"><a href="#/product/${esc(p.id)}">${img(p)}<div class="body">
-    <h3>${esc(p.name)}</h3><div class="price">${fmt(p.price)}</div>
+    <h3>${esc(p.name)}</h3><div class="price">${priceHtml(p)}</div>
     <span class="tag ${p.in_stock ? '' : 'out'}">${p.in_stock ? 'In Stock' : 'Sold Out'}</span></div></a></article>`;
 }
 function productGrid(list) {
@@ -70,7 +88,7 @@ function productPage(id) {
   const p = find(id);
   if (!p) return `<div class="center"><h2>Product not found</h2><p>This product may no longer be available.</p><a class="btn" href="#/shop">Back to Shop</a></div>`;
   return `<a href="#/shop">&larr; Back to Shop</a><div class="detail" style="margin-top:16px">${img(p)}<div>
-    <h1 style="font-size:2rem">${esc(p.name)}</h1><div class="price" style="font-size:1.4rem">${fmt(p.price)}</div>
+    <h1 style="font-size:2rem">${esc(p.name)}</h1><div class="price" style="font-size:1.4rem">${priceHtml(p)}</div>
     <p><span class="tag ${p.in_stock ? '' : 'out'}">${p.in_stock ? 'In Stock' : 'Sold Out'}</span>
     ${p.category ? ` <span class="tag">${esc(p.category)}</span>` : ''}</p>
     <p>${esc(p.description || '')}</p>
@@ -83,16 +101,16 @@ function cartLines() {
   return cart.map(i => ({ ...i, p: find(i.id) }));
 }
 const validLines = () => cartLines().filter(l => l.p && l.p.in_stock);
-const cartTotal = () => validLines().reduce((s, l) => s + Number(l.p.price) * l.qty, 0);
+const cartTotal = () => validLines().reduce((s, l) => s + unit(l.p.price) * l.qty, 0);
 
 function cartPage() {
   if (!cart.length) return `<div class="center"><h2>Your cart is empty</h2><p>Add something you love to get started.</p><a class="btn" href="#/shop">Continue Shopping</a></div>`;
   if (loadError) return `<div class="msg err">${loadError}</div>`;
-  const rows = cartLines().map(l => l.p ? `<div class="row">${img(l.p)}<div><strong>${esc(l.p.name)}</strong><div>${fmt(l.p.price)}</div>
+  const rows = cartLines().map(l => l.p ? `<div class="row">${img(l.p)}<div><strong>${esc(l.p.name)}</strong><div>${priceHtml(l.p)}</div>
     ${l.p.in_stock ? '' : '<div class="field-err">Sold out – please remove this item to continue.</div>'}
     <button class="link" data-rm="${esc(l.id)}">Remove</button></div>
     <div class="sub"><span class="qty"><button data-q="${esc(l.id)}" data-d="-1" aria-label="Decrease">&minus;</button><span>${l.qty}</span><button data-q="${esc(l.id)}" data-d="1" aria-label="Increase">+</button></span>
-    <div><strong>${fmt(l.p.price * l.qty)}</strong></div></div></div>`
+    <div><strong>${fmt(unit(l.p.price) * l.qty)}</strong></div></div></div>`
     : `<div class="row"><div></div><div><strong>Unavailable item</strong><div class="field-err">This product is no longer available.</div><button class="link" data-rm="${esc(l.id)}">Remove</button></div><div></div></div>`).join('');
   const blocked = cartLines().some(l => !l.p || !l.p.in_stock);
   return `<h2>Your Cart</h2>${rows}<div class="totals"><div>Subtotal: ${fmt(cartTotal())}</div><div class="t">Total: ${fmt(cartTotal())}</div></div>
@@ -112,7 +130,7 @@ function checkoutPage() {
     <label for="f-addr">Delivery address</label><textarea id="f-addr" rows="3" autocomplete="street-address"></textarea><div class="field-err" data-e="addr"></div>
     <div id="co-msg"></div><p><button class="btn" id="pay" type="submit">Pay ${fmt(cartTotal())}</button></p></form>
     <aside class="summary"><h3>Order Summary</h3>
-    ${lines.map(l => `<div class="l"><span>${esc(l.p.name)} × ${l.qty}</span><span>${fmt(l.p.price * l.qty)}</span></div>`).join('')}
+    ${lines.map(l => `<div class="l"><span>${esc(l.p.name)} × ${l.qty}</span><span>${fmt(unit(l.p.price) * l.qty)}</span></div>`).join('')}
     <hr style="border:0;border-top:1px solid var(--line)"><div class="l"><strong>Total</strong><strong>${fmt(cartTotal())}</strong></div>
     <a href="#/cart">Edit cart</a></aside></div>`;
 }
@@ -269,8 +287,14 @@ document.addEventListener('submit', e => {
 
 /* ---------- payment ---------- */
 function setMsg(html, err) { const m = document.getElementById('co-msg'); if (m) m.innerHTML = html ? `<div class="msg ${err ? 'err' : ''}">${html}</div>` : ''; }
-function startPayment(customer) {
+async function startPayment(customer) {
   if (!window.PaystackPop || !cfg.paystackPublicKey) return setMsg('Payment is currently unavailable. Please try again later.', true);
+  const before = JSON.stringify(sale);
+  try { await loadSale(); } catch (e) { return setMsg('We could not confirm current prices. Please try again.', true); }
+  if (JSON.stringify(sale) !== before) {
+    route();
+    return setMsg('Our prices just changed. Please review your updated total and try again.', true);
+  }
   const items = validLines().map(l => ({ id: l.id, quantity: l.qty }));
   const total = cartTotal();
   const reference = 'PNE-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8).toUpperCase();
