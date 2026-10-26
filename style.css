@@ -476,3 +476,9 @@ input:focus,textarea:focus{outline:none;border-color:var(--forest);box-shadow:0 
   .site-footer .wrap{flex-direction:column;text-align:center}
   .hero .btn{display:inline-block;width:100%;text-align:center}
 }
+/* ---------- per-product sale (prices come from the database via script.js) ---------- */
+.card a{position:relative}
+.price-now{color:var(--forest-deep);font-weight:600}
+.price-was{color:var(--mu);font-size:.88em;margin-left:6px;text-decoration:line-through}
+.sale-badge{position:absolute;top:12px;left:12px;z-index:1;background:var(--err);color:#fff;font-size:.72rem;font-weight:600;letter-spacing:.04em;padding:5px 10px;border-radius:var(--radius)}
+.sale-pill{display:inline-block;vertical-align:middle;margin-left:6px;background:var(--err-tint);color:var(--err);font-size:.72rem;font-weight:600;letter-spacing:.04em;padding:3px 9px;border-radius:999px}

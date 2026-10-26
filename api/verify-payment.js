@@ -1,4 +1,8 @@
 // Verifies a Paystack payment server-side, re-prices the cart from Supabase, then creates the order.
+// Prices (including any per-product sale) are ALWAYS recomputed here from the database;
+// nothing about price, discount or total is ever taken from the browser.
+const { unitPrice } = require('../pricing.js');
+
 module.exports = async (req, res) => {
   const fail = (code, message) => res.status(code).json({ ok: false, message });
   if (req.method !== 'POST') return fail(405, 'Method not allowed.');
@@ -32,25 +36,16 @@ module.exports = async (req, res) => {
 
     // 2. Real prices from Supabase.
     const ids = [...clean.keys()].map(encodeURIComponent).join(',');
-    const pr = await sb(`products?id=in.(${ids})&select=id,name,price,in_stock`);
+    const pr = await sb(`products?id=in.(${ids})&select=id,name,price,in_stock,sale_active,sale_percentage`);
     const prods = await pr.json();
     if (!pr.ok || !Array.isArray(prods)) return fail(502, 'We could not check product prices. Please try again.');
     if (prods.length !== clean.size) return fail(400, 'One or more products are no longer available.');
-
-    // 2b. Current store-wide sale (read live from Supabase, never from the browser).
-    const sr = await sb('store_settings?id=eq.1&select=sale_active,sale_percentage');
-    const sd = await sr.json();
-    if (!sr.ok || !Array.isArray(sd)) return fail(502, 'We could not check the current sale. Please try again.');
-    const sale = sd[0] || {};
-    const salePct = Number(sale.sale_percentage);
-    const saleOn = sale.sale_active === true && isFinite(salePct) && salePct > 0 && salePct <= 100;
-    const unitPrice = (price) => saleOn ? Math.round(Number(price) * (100 - salePct) / 100) : Number(price);
 
     let total = 0;
     const paidPrice = new Map();
     for (const p of prods) {
       if (!p.in_stock) return fail(400, `"${p.name}" is sold out.`);
-      const u = unitPrice(p.price);
+      const u = unitPrice(p); // original price, or its per-product sale price if the sale is active
       paidPrice.set(String(p.id), u);
       total += u * clean.get(String(p.id));
     }

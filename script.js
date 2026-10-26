@@ -8,9 +8,22 @@ try { cart = JSON.parse(localStorage.getItem('pne_cart') || '[]').filter(i => i 
 const saveCart = () => { try { localStorage.setItem('pne_cart', JSON.stringify(cart)); } catch (e) {} updateBadge(); };
 const updateBadge = () => { document.getElementById('cart-count').textContent = cart.reduce((n, i) => n + i.qty, 0); };
 const find = id => products.find(p => String(p.id) === String(id));
+const P = window.PNEPricing; // shared sale-pricing rules (pricing.js) - same code the server uses
+const unit = p => P.unitPrice(p); // what one unit actually costs right now (sale price if on sale)
+const priceHtml = p => P.isOnSale(p)
+  ? `<span class="price-now">${fmt(unit(p))}</span> <s class="price-was">${fmt(p.price)}</s>`
+  : fmt(p.price);
+const saleBadge = (p, cls) => P.isOnSale(p) ? `<span class="${cls}">${Number(p.sale_percentage)}% OFF</span>` : '';
 const img = p => `<img class="img" src="${esc(p.image || '/images/img1.jpeg')}" alt="${esc(p.name)}" loading="lazy">`;
 
 /* ---------- data ---------- */
+async function fetchProducts() {
+  const pr = await fetch(`${cfg.supabaseUrl}/rest/v1/products?select=*&order=created_at.desc`, {
+    headers: { apikey: cfg.supabaseAnonKey, Authorization: 'Bearer ' + cfg.supabaseAnonKey }
+  });
+  if (!pr.ok) throw new Error('Could not load products.');
+  return pr.json();
+}
 async function init() {
   document.getElementById('yr').textContent = new Date().getFullYear();
   updateBadge();
@@ -18,11 +31,7 @@ async function init() {
     const r = await fetch('/api/config');
     cfg = await r.json();
     if (!cfg.supabaseUrl || !cfg.supabaseAnonKey) throw new Error('Store is not configured yet.');
-    const pr = await fetch(`${cfg.supabaseUrl}/rest/v1/products?select=*&order=created_at.desc`, {
-      headers: { apikey: cfg.supabaseAnonKey, Authorization: 'Bearer ' + cfg.supabaseAnonKey }
-    });
-    if (!pr.ok) throw new Error('Could not load products.');
-    products = await pr.json();
+    products = await fetchProducts();
   } catch (e) {
     loadError = "We couldn't load our products right now. Please refresh the page or try again shortly.";
   }
@@ -32,8 +41,8 @@ async function init() {
 
 /* ---------- views ---------- */
 function productCard(p) {
-  return `<article class="card"><a href="#/product/${esc(p.id)}">${img(p)}<div class="body">
-    <h3>${esc(p.name)}</h3><div class="price">${fmt(p.price)}</div>
+  return `<article class="card"><a href="#/product/${esc(p.id)}">${saleBadge(p, 'sale-badge')}${img(p)}<div class="body">
+    <h3>${esc(p.name)}</h3><div class="price">${priceHtml(p)}</div>
     <span class="tag ${p.in_stock ? '' : 'out'}">${p.in_stock ? 'In Stock' : 'Sold Out'}</span></div></a></article>`;
 }
 function productGrid(list) {
@@ -70,7 +79,7 @@ function productPage(id) {
   const p = find(id);
   if (!p) return `<div class="center"><h2>Product not found</h2><p>This product may no longer be available.</p><a class="btn" href="#/shop">Back to Shop</a></div>`;
   return `<a href="#/shop">&larr; Back to Shop</a><div class="detail" style="margin-top:16px">${img(p)}<div>
-    <h1 style="font-size:2rem">${esc(p.name)}</h1><div class="price" style="font-size:1.4rem">${fmt(p.price)}</div>
+    <h1 style="font-size:2rem">${esc(p.name)}</h1><div class="price" style="font-size:1.4rem">${priceHtml(p)} ${saleBadge(p, 'sale-pill')}</div>
     <p><span class="tag ${p.in_stock ? '' : 'out'}">${p.in_stock ? 'In Stock' : 'Sold Out'}</span>
     ${p.category ? ` <span class="tag">${esc(p.category)}</span>` : ''}</p>
     <p>${esc(p.description || '')}</p>
@@ -83,16 +92,16 @@ function cartLines() {
   return cart.map(i => ({ ...i, p: find(i.id) }));
 }
 const validLines = () => cartLines().filter(l => l.p && l.p.in_stock);
-const cartTotal = () => validLines().reduce((s, l) => s + Number(l.p.price) * l.qty, 0);
+const cartTotal = () => validLines().reduce((s, l) => s + unit(l.p) * l.qty, 0);
 
 function cartPage() {
   if (!cart.length) return `<div class="center"><h2>Your cart is empty</h2><p>Add something you love to get started.</p><a class="btn" href="#/shop">Continue Shopping</a></div>`;
   if (loadError) return `<div class="msg err">${loadError}</div>`;
-  const rows = cartLines().map(l => l.p ? `<div class="row">${img(l.p)}<div><strong>${esc(l.p.name)}</strong><div>${fmt(l.p.price)}</div>
+  const rows = cartLines().map(l => l.p ? `<div class="row">${img(l.p)}<div><strong>${esc(l.p.name)}</strong><div>${priceHtml(l.p)} ${saleBadge(l.p, 'sale-pill')}</div>
     ${l.p.in_stock ? '' : '<div class="field-err">Sold out – please remove this item to continue.</div>'}
     <button class="link" data-rm="${esc(l.id)}">Remove</button></div>
     <div class="sub"><span class="qty"><button data-q="${esc(l.id)}" data-d="-1" aria-label="Decrease">&minus;</button><span>${l.qty}</span><button data-q="${esc(l.id)}" data-d="1" aria-label="Increase">+</button></span>
-    <div><strong>${fmt(l.p.price * l.qty)}</strong></div></div></div>`
+    <div><strong>${fmt(unit(l.p) * l.qty)}</strong></div></div></div>`
     : `<div class="row"><div></div><div><strong>Unavailable item</strong><div class="field-err">This product is no longer available.</div><button class="link" data-rm="${esc(l.id)}">Remove</button></div><div></div></div>`).join('');
   const blocked = cartLines().some(l => !l.p || !l.p.in_stock);
   return `<h2>Your Cart</h2>${rows}<div class="totals"><div>Subtotal: ${fmt(cartTotal())}</div><div class="t">Total: ${fmt(cartTotal())}</div></div>
@@ -112,7 +121,7 @@ function checkoutPage() {
     <label for="f-addr">Delivery address</label><textarea id="f-addr" rows="3" autocomplete="street-address"></textarea><div class="field-err" data-e="addr"></div>
     <div id="co-msg"></div><p><button class="btn" id="pay" type="submit">Pay ${fmt(cartTotal())}</button></p></form>
     <aside class="summary"><h3>Order Summary</h3>
-    ${lines.map(l => `<div class="l"><span>${esc(l.p.name)} × ${l.qty}</span><span>${fmt(l.p.price * l.qty)}</span></div>`).join('')}
+    ${lines.map(l => `<div class="l"><span>${esc(l.p.name)} × ${l.qty}</span><span>${fmt(unit(l.p) * l.qty)}</span></div>`).join('')}
     <hr style="border:0;border-top:1px solid var(--line)"><div class="l"><strong>Total</strong><strong>${fmt(cartTotal())}</strong></div>
     <a href="#/cart">Edit cart</a></aside></div>`;
 }
@@ -269,13 +278,26 @@ document.addEventListener('submit', e => {
 
 /* ---------- payment ---------- */
 function setMsg(html, err) { const m = document.getElementById('co-msg'); if (m) m.innerHTML = html ? `<div class="msg ${err ? 'err' : ''}">${html}</div>` : ''; }
-function startPayment(customer) {
+async function startPayment(customer) {
   if (!window.PaystackPop || !cfg.paystackPublicKey) return setMsg('Payment is currently unavailable. Please try again later.', true);
+  const btn = document.getElementById('pay');
+  setMsg('');
+  // Re-read live prices first, so the amount we ask Paystack to charge is the same one the
+  // server will compute (a sale may have been started, changed or ended since the page loaded).
+  const shownTotal = cartTotal();
+  btn.disabled = true;
+  try { products = await fetchProducts(); }
+  catch (e) { btn.disabled = false; return setMsg('We could not confirm the latest prices. Please try again.', true); }
+  if (cartLines().some(l => !l.p || !l.p.in_stock) || cartTotal() !== shownTotal) {
+    route(); // re-render with the fresh prices, then restore what the customer typed
+    const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+    set('f-name', customer.name); set('f-email', customer.email); set('f-phone', customer.phone); set('f-addr', customer.address);
+    return setMsg('Some prices or availability just changed. Please review your updated total, then pay again.', true);
+  }
+  btn.disabled = false;
   const items = validLines().map(l => ({ id: l.id, quantity: l.qty }));
   const total = cartTotal();
   const reference = 'PNE-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8).toUpperCase();
-  const btn = document.getElementById('pay');
-  setMsg('');
   window.PaystackPop.setup({
     key: cfg.paystackPublicKey, email: customer.email, amount: Math.round(total * 100), currency: 'NGN', ref: reference,
     metadata: { custom_fields: [{ display_name: 'Customer', variable_name: 'customer', value: customer.name }] },

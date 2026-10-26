@@ -231,6 +231,14 @@
   }
   .img-preview.show{display:block;}
 
+  .product-card .price s{font-weight:400;color:var(--ink-soft);font-size:13px;margin-left:6px;}
+  .pill.sale{background:#F3E5E1;color:var(--danger);}
+  .sale-fields{margin-top:12px;padding:14px 16px;border:1px solid var(--line);background:var(--cream);}
+  .sale-fields[hidden]{display:none;}
+  .sale-fields .field{margin-bottom:10px;}
+  .sale-preview{font-size:14px;color:var(--ink-soft);}
+  .sale-preview b{color:var(--forest-dark);}
+  .sale-preview s{margin:0 4px;}
   .toggle-row{display:flex;align-items:center;gap:10px;}
   .switch{position:relative;width:42px;height:24px;flex-shrink:0;}
   .switch input{opacity:0;width:0;height:0;}
@@ -405,6 +413,22 @@
           <input type="number" id="p-price" min="0" step="1" required>
         </div>
         <div class="field">
+          <div class="toggle-row">
+            <label class="switch">
+              <input type="checkbox" id="p-sale-active">
+              <span class="slider"></span>
+            </label>
+            <span id="p-sale-label">Put this product on sale</span>
+          </div>
+          <div class="sale-fields" id="p-sale-fields" hidden>
+            <div class="field">
+              <label for="p-sale-percentage">Discount (%)</label>
+              <input type="number" id="p-sale-percentage" min="1" max="99" step="1" placeholder="1 – 99">
+            </div>
+            <div class="sale-preview" id="p-sale-preview" aria-live="polite"></div>
+          </div>
+        </div>
+        <div class="field">
           <label for="p-category">Category</label>
           <input type="text" id="p-category">
         </div>
@@ -474,6 +498,7 @@
 
 <div class="toast-wrap" id="toast-wrap"></div>
 
+<script src="/pricing.js"></script>
 <script>
 (function(){
   "use strict";
@@ -653,8 +678,11 @@
           <div class="body">
             <div class="name">${escapeHtml(p.name)}</div>
             <div class="cat">${escapeHtml(p.category || 'Uncategorized')}</div>
-            <div class="price">${naira(p.price)}</div>
-            <span class="pill ${p.in_stock ? 'in-stock' : 'sold-out'}" style="width:fit-content;">${p.in_stock ? 'In stock' : 'Sold out'}</span>
+            <div class="price">${p.sale_active === true && PNEPricing.isOnSale(p) ? `${naira(PNEPricing.unitPrice(p))} <s>${naira(p.price)}</s>` : naira(p.price)}</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <span class="pill ${p.in_stock ? 'in-stock' : 'sold-out'}" style="width:fit-content;">${p.in_stock ? 'In stock' : 'Sold out'}</span>
+              ${PNEPricing.isOnSale(p) ? `<span class="pill sale" style="width:fit-content;">${Number(p.sale_percentage)}% off</span>` : ''}
+            </div>
             <div class="actions">
               <button class="btn ghost small" data-edit="${p.id}">Edit</button>
               <button class="btn ghost small" data-delete="${p.id}" style="color:var(--danger);">Delete</button>
@@ -698,6 +726,8 @@
       document.getElementById("p-category").value = p.category || "";
       document.getElementById("p-in-stock").checked = !!p.in_stock;
       document.getElementById("p-stock-label").textContent = p.in_stock ? "In stock" : "Sold out";
+      document.getElementById("p-sale-active").checked = p.sale_active === true;
+      document.getElementById("p-sale-percentage").value = p.sale_percentage || "";
       if(p.image){
         const prev = document.getElementById("p-image-preview");
         prev.src = p.image;
@@ -708,8 +738,34 @@
       document.getElementById("p-id").value = "";
       document.getElementById("p-stock-label").textContent = "In stock";
     }
+    syncSaleUI();
     openModal("product-modal-overlay");
   }
+
+  /* Sale controls: show/hide the discount field and preview original vs sale price.
+     Display only - the server re-validates and the original price is never overwritten. */
+  function syncSaleUI(){
+    document.getElementById("product-form-error").classList.remove("show"); // clear a stale message while the admin corrects the value
+    const on = document.getElementById("p-sale-active").checked;
+    document.getElementById("p-sale-fields").hidden = !on;
+    document.getElementById("p-sale-label").textContent = on ? "On sale" : "Put this product on sale";
+    const prev = document.getElementById("p-sale-preview");
+    if(!on){ prev.textContent = ""; return; }
+    const price = Number(document.getElementById("p-price").value);
+    const raw = document.getElementById("p-sale-percentage").value;
+    const pct = Number(raw);
+    if(raw === "" || !PNEPricing.isValidPercent(pct)){
+      prev.textContent = "Enter a whole number from 1 to 99.";
+    } else if(!(price > 0)){
+      prev.textContent = "Enter the product's original price above.";
+    } else {
+      prev.innerHTML = "Customers will see <s>" + naira(price) + "</s> <b>" + naira(PNEPricing.salePriceOf(price, pct)) + "</b> (" + pct + "% off)";
+    }
+  }
+  ["p-sale-active", "p-sale-percentage", "p-price"].forEach(id => {
+    document.getElementById(id).addEventListener("input", syncSaleUI);
+    document.getElementById(id).addEventListener("change", syncSaleUI);
+  });
 
   document.getElementById("p-in-stock").addEventListener("change", (e) => {
     document.getElementById("p-stock-label").textContent = e.target.checked ? "In stock" : "Sold out";
@@ -762,12 +818,25 @@
         imageUrl = existing.image;
       }
 
+      const saleOn = document.getElementById("p-sale-active").checked;
+      const saleRaw = document.getElementById("p-sale-percentage").value;
+      let salePct = saleRaw === "" ? null : Number(saleRaw);
+      if(!saleOn && salePct !== null && !PNEPricing.isValidPercent(salePct)) salePct = null; // sale is off: ignore a stray hidden value
+      if(saleOn && !PNEPricing.isValidPercent(salePct)){
+        throw new Error("Enter a discount between 1% and 99% (whole number) to put this product on sale.");
+      }
+      if(salePct !== null && !PNEPricing.isValidPercent(salePct)){
+        throw new Error("Discount must be a whole number between 1 and 99.");
+      }
+
       const payload = {
         name: document.getElementById("p-name").value.trim(),
         description: document.getElementById("p-description").value.trim(),
         price: Number(document.getElementById("p-price").value),
         category: document.getElementById("p-category").value.trim(),
         in_stock: document.getElementById("p-in-stock").checked,
+        sale_active: saleOn,
+        sale_percentage: salePct,
         image: imageUrl
       };
 
