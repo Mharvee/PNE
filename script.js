@@ -52,11 +52,22 @@ function productGrid(list) {
   return `<div class="grid">${list.map(productCard).join('')}</div>`;
 }
 
+
 function home() {
-  return `<section class="hero"><h1>Peace Nature Empire</h1>
-    <p>Welcome to our online store. Browse our collection, order in a 
-    <br>few clicks and pay securely.</p>
-    <a class="btn" href="#/shop">Shop Now</a></section>
+  return `<section class="hero">
+    <video class="hero-video" autoplay muted loop playsinline preload="metadata"
+      poster="/images/hero.jpeg"
+      aria-hidden="true">
+      <source src="/videos/hero-video.mp4" type="video/mp4">
+    </video>
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <h1>Peace Nature Empire</h1>
+      <p>Welcome to our online store. Browse our collection, order in a
+      <br>few clicks and pay securely.</p>
+      <a class="btn" href="#/shop">Shop Now</a>
+    </div>
+  </section>
   <section class="sec"><div class="sec-head"><h2>Featured Products</h2><a href="#/shop">View all</a></div>${productGrid(products.slice(0, 4))}</section>
   <section class="sec"><h2>Why shop with us</h2><div class="benefits">
     <div><h3>Simple ordering</h3><p>Pick your items, check out and you're done.</p></div>
@@ -64,6 +75,7 @@ function home() {
     <div><h3>Delivered to you</h3><p>Tell us where to send your order at checkout.</p></div></div></section>
   <section class="sec cta"><h2>Have a question?</h2><p>We'd love to hear from you.</p><a class="btn" href="#/contact">Contact Us</a></section>`;
 }
+
 
 let shopCat = 'All';
 function shop() {
