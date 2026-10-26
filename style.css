@@ -123,45 +123,91 @@ nav a.on{color:var(--forest-deep)}
    <h1>…</h1><p>…</p><a class="btn">…</a></section>
    Styled as a full-bleed editorial split, no frame, no watermark.
    ============================================================ */
+
 .hero {
   order: 1;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   width: 100%;
-  min-height: 420px;
+  min-height: 480px;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
   padding: 70px 28px;
   box-sizing: border-box;
-  background: var(--forest-tint);
+  background: var(--forest-deep);
 }
 
-.hero::before {
-  content: none;
+.hero-video,
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.hero-video {
+  z-index: -2;
+  object-fit: cover;
+  object-position: center;
+}
+
+.hero-overlay {
+  z-index: -1;
+  background: linear-gradient(
+    180deg,
+    rgba(15, 26, 20, 0.35),
+    rgba(15, 26, 20, 0.65)
+  );
+  pointer-events: none;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 1;
+  max-width: 760px;
+  margin: auto;
 }
 
 .hero h1,
 .hero p,
 .hero .btn {
   max-width: 520px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.hero h1 {
+  color: var(--ivory);
 }
 
 .hero p {
+  color: rgba(255, 252, 247, 0.92);
   line-height: 1.7;
 }
 
-@media(max-width:880px){
-  .hero{min-height:clamp(480px,88vh,620px);justify-content:flex-end;padding:0}
-  .hero::before{inset:0;background:
-      linear-gradient(180deg,rgba(20,36,27,.15) 40%,rgba(15,26,20,.72) 100%),
-      url('/images/hero.jpeg') center/cover no-repeat,
-      linear-gradient(150deg,var(--forest-deep),var(--forest))}
-  .hero h1,.hero p{max-width:100%}
-  .hero h1{color:var(--ivory)}
-  .hero p{color:rgba(255,252,247,.86)}
-  .hero{padding:0 22px 48px}
+@media (max-width: 880px) {
+  .hero {
+    min-height: clamp(480px, 88vh, 620px);
+    padding: 48px 22px;
+  }
+
+  .hero-content {
+    width: 100%;
+  }
+
+  .hero h1,
+  .hero p {
+    max-width: 100%;
+  }
+
+  .hero p br {
+    display: none;
+  }
 }
+
 
 /* ---------- editorial band (static, home only) ---------- */
 .edit-band{display:none}
